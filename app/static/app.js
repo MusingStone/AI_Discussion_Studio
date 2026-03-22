@@ -447,12 +447,13 @@
     const errorHtml = turn.error
       ? `<div class="error-banner compact-error"><strong>${escapeHtml(turn.error.code)}</strong><div>${escapeHtml(turn.error.message)}</div></div>`
       : "";
+    const phaseLabel = turn.phase ? ` / ${escapeHtml(String(turn.phase).replaceAll("_", " "))}` : "";
     return `
       <article class="turn-card">
         <div class="turn-head">
           <div class="speaker-badge">${escapeHtml((turn.speaker || "?").slice(0, 1).toUpperCase())}</div>
           <div class="turn-main">
-            <div class="turn-index">Turn ${escapeHtml(turn.turn_number)} / Cycle ${escapeHtml(turn.cycle_number)}</div>
+            <div class="turn-index">Turn ${escapeHtml(turn.turn_number)} / Cycle ${escapeHtml(turn.cycle_number)}${phaseLabel}</div>
             <h3>${escapeHtml(turn.speaker)}</h3>
             <p>${escapeHtml(turn.role_label || "Participant")}</p>
             <div class="turn-tags">
@@ -498,6 +499,58 @@
       `
       : "";
 
+    const gameState = session.game_state?.mode === "werewolf"
+      ? `
+        <div class="meta-block">
+          <span class="section-kicker">Game State</span>
+          <div>Phase: <strong>${escapeHtml(session.game_state.phase || "setup")}</strong></div>
+          <div>Round: <strong>${escapeHtml(session.game_state.round_number || 0)}</strong></div>
+          ${session.game_state.winner ? `<div>Winner: <strong>${escapeHtml(session.game_state.winner)}</strong></div>` : ""}
+          <span class="section-kicker">Alive</span>
+          <ul class="participant-roster">
+            ${(session.game_state.alive_players || []).map((player) => `
+              <li class="participant-roster-item"><strong>${escapeHtml(player.name)}</strong></li>
+            `).join("")}
+          </ul>
+          ${(session.game_state.dead_players || []).length ? `
+            <span class="section-kicker">Dead</span>
+            <ul class="participant-roster">
+              ${(session.game_state.dead_players || []).map((player) => `
+                <li class="participant-roster-item">
+                  <strong>${escapeHtml(player.name)}</strong>
+                  <span>${escapeHtml(player.revealed_role || "Role hidden")}</span>
+                </li>
+              `).join("")}
+            </ul>
+          ` : ""}
+          <span class="section-kicker">Latest Night</span>
+          <div class="plain-text">${escapeHtml(session.game_state.last_night_summary || "No night result yet.")}</div>
+          <span class="section-kicker">Latest Vote</span>
+          <div class="plain-text">${escapeHtml(session.game_state.last_vote_summary || "No vote result yet.")}</div>
+        </div>
+      `
+      : "";
+
+    const moderatorView = session.game_state?.mode === "werewolf"
+      ? `
+        <div class="meta-block">
+          <span class="section-kicker">Moderator View</span>
+          <div class="muted">User-visible night truth. This panel is not shared back into the public AI transcript.</div>
+          <span class="section-kicker">Role Map</span>
+          <ul class="participant-roster">
+            ${(session.game_state.moderator_view?.role_map || []).map((player) => `
+              <li class="participant-roster-item">
+                <strong>${escapeHtml(player.name)}</strong>
+                <span>${escapeHtml(player.role)} / ${escapeHtml(player.team)} / ${escapeHtml(player.status)}</span>
+              </li>
+            `).join("")}
+          </ul>
+          <span class="section-kicker">Latest Night Truth</span>
+          <div class="plain-text">${escapeHtml(session.game_state.moderator_view?.latest_night_private || "No night actions resolved yet.")}</div>
+        </div>
+      `
+      : "";
+
     const timeline = session.turns?.length
       ? `<section class="timeline">${session.turns.map(renderTurn).join("")}</section>`
       : `
@@ -507,6 +560,10 @@
           </div>
         </section>
       `;
+
+    const finalPanelTitle = session.game_state?.mode === "werewolf"
+      ? "Final Game Summary"
+      : "Final Synthesized Answer";
 
     return `
       <div class="panel results-panel">
@@ -531,6 +588,8 @@
               </article>
             </div>
             ${participants}
+            ${gameState}
+            ${moderatorView}
             ${session.unresolved_disagreements?.length ? `
               <div class="meta-block">
                 <span class="section-kicker">Unresolved</span>
@@ -553,7 +612,7 @@
             ${timeline}
             <section class="final-answer-panel">
               <div class="section-header">
-                <h3>Final Synthesized Answer</h3>
+                <h3>${escapeHtml(finalPanelTitle)}</h3>
                 <span class="status-pill status-${escapeHtml(session.status)}">${escapeHtml(session.status)}</span>
               </div>
               ${renderMarkdownBlock(session.final_answer || "No final answer yet.", "final-answer")}
@@ -564,8 +623,32 @@
     `;
   }
 
+  function sessionRenderSignature(session) {
+    const turnTail = (session.turns || []).slice(-1)[0];
+    const errorTail = (session.errors || []).slice(-1)[0];
+    return JSON.stringify({
+      status: session.status || "",
+      turnCount: session.turns?.length || 0,
+      finalAnswer: session.final_answer || "",
+      gameMode: session.game_state?.mode || "",
+      gamePhase: session.game_state?.phase || "",
+      gameRound: session.game_state?.round_number || 0,
+      aliveCount: session.game_state?.alive_players?.length || 0,
+      deadCount: session.game_state?.dead_players?.length || 0,
+      gameWinner: session.game_state?.winner || "",
+      unresolvedCount: session.unresolved_disagreements?.length || 0,
+      openQuestionCount: session.open_questions?.length || 0,
+      errorCount: session.errors?.length || 0,
+      lastTurnStatus: turnTail?.status || "",
+      lastTurnSpeaker: turnTail?.speaker || "",
+      lastTurnContent: turnTail?.content || "",
+      lastErrorMessage: errorTail?.message || "",
+    });
+  }
+
   async function pollSession(sessionId, shell) {
     let active = true;
+    let previousSignature = "";
     while (active) {
       try {
         const response = await fetch(`/api/sessions/${sessionId}`, { headers: { Accept: "application/json" } });
@@ -573,8 +656,13 @@
           break;
         }
         const session = await response.json();
-        shell.innerHTML = renderSession(session);
-        enhanceRichText(shell);
+        const signature = sessionRenderSignature(session);
+        if (signature !== previousSignature) {
+          shell.innerHTML = renderSession(session);
+          enhanceRichText(shell);
+          restoreWorkbenchScrollTarget();
+          previousSignature = signature;
+        }
         if (session.status !== "queued" && session.status !== "running") {
           active = false;
           break;
@@ -584,6 +672,34 @@
         break;
       }
       await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    }
+  }
+
+  function restoreWorkbenchScrollTarget() {
+    const hash = window.location.hash || "";
+    const pendingTarget = window.sessionStorage.getItem("discussion-scroll-target") || "";
+    const targetId = hash === "#results-shell"
+      ? "results-shell"
+      : pendingTarget;
+    if (!targetId) {
+      return;
+    }
+    if (document.body.dataset.workbenchScrollDone === targetId) {
+      if (pendingTarget) {
+        window.sessionStorage.removeItem("discussion-scroll-target");
+      }
+      return;
+    }
+    const target = document.getElementById(targetId);
+    if (!target) {
+      return;
+    }
+    window.requestAnimationFrame(function () {
+      target.scrollIntoView({ block: "start", behavior: "auto" });
+      document.body.dataset.workbenchScrollDone = targetId;
+    });
+    if (pendingTarget) {
+      window.sessionStorage.removeItem("discussion-scroll-target");
     }
   }
 
@@ -627,10 +743,17 @@
     }
 
     const shell = document.getElementById("results-shell");
+    const discussionForm = document.getElementById("discussion-form");
+    if (discussionForm) {
+      discussionForm.addEventListener("submit", function () {
+        window.sessionStorage.setItem("discussion-scroll-target", "results-shell");
+      });
+    }
     if (shell) {
       const sessionId = shell.dataset.sessionId;
       const status = shell.dataset.sessionStatus;
       enhanceRichText(shell);
+      restoreWorkbenchScrollTarget();
       if (sessionId && (status === "queued" || status === "running")) {
         pollSession(sessionId, shell);
       }

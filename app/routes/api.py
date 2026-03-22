@@ -17,6 +17,10 @@ def _registry(request: Request) -> RuntimeRegistry:
     return registry
 
 
+def _public_session_payload(session) -> dict:
+    return session.model_dump(mode="json", exclude={"engine_state"})
+
+
 @router.get("/runtime-config")
 async def runtime_config(request: Request) -> dict:
     return _registry(request).client_payload()
@@ -38,7 +42,7 @@ async def get_session(request: Request, session_id: str) -> dict:
     session = request.app.state.session_store.get_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found.")
-    return session.model_dump(mode="json")
+    return _public_session_payload(session)
 
 
 @router.delete("/sessions/{session_id}")

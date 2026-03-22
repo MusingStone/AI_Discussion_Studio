@@ -1,3 +1,7 @@
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --bg: #f3efe8;
   --bg-warm: #fbf7f1;

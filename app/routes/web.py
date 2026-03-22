@@ -186,13 +186,15 @@ async def submit_discussion(request: Request) -> HTMLResponse:
     orchestrator = request.app.state.orchestrator
     session = orchestrator.create_session(discussion_request)
     asyncio.create_task(orchestrator.run_session(session.session_id, discussion_request))
-    return RedirectResponse(url=f"/?session_id={session.session_id}", status_code=303)
+    return RedirectResponse(url=f"/?session_id={session.session_id}#results-shell", status_code=303)
 
 
 @router.post("/sessions/{session_id}/delete", response_class=HTMLResponse)
 async def delete_session(request: Request, session_id: str) -> RedirectResponse:
     request.app.state.session_store.delete_session(session_id)
     referer = request.headers.get("referer") or "/"
+    if "#" not in referer:
+        referer = f"{referer}#recent-sessions"
     if f"session_id={session_id}" in referer:
-        referer = "/"
+        referer = "/#recent-sessions"
     return RedirectResponse(url=referer, status_code=303)

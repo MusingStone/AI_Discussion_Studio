@@ -195,27 +195,6 @@
   </section>
 
   <aside class="panel sidebar-panel">
-    <div class="panel-header">
-      <h2>Template Catalog</h2>
-      <p>Discussion templates define participant order, prompts, and model mapping directly from configuration.</p>
-    </div>
-    <div class="template-list">
-      {% for discussion in discussion_options %}
-      <article class="template-card">
-        <h3>{{ discussion.display_name }}</h3>
-        <p class="muted">{{ discussion.description }}</p>
-        <div class="catalog-meta">Max turn cycles: {{ discussion.max_turn_cycles }}</div>
-        <ol class="participant-order">
-          {% for participant in discussion.participants %}
-          <li>
-            <strong>{{ participant.name }}</strong>
-            <span class="muted">{{ participant.role_label or 'Participant' }} / {{ participant.model }} / {{ participant.prompt }}</span>
-          </li>
-          {% endfor %}
-        </ol>
-      </article>
-      {% endfor %}
-    </div>
     <div class="panel-header recent-header">
       <h2>Protocol Profiles</h2>
       <p>Only the two protocol families stay visible here. Models and participant behavior live elsewhere.</p>
@@ -230,14 +209,14 @@
       </article>
       {% endfor %}
     </div>
-    <div class="panel-header recent-header">
+    <div class="panel-header recent-header" id="recent-sessions">
       <h2>Recent Sessions</h2>
     </div>
     <div class="recent-list">
       {% if recent_sessions %}
         {% for item in recent_sessions %}
         <div class="recent-item-shell">
-          <a href="/?session_id={{ item.session_id }}" class="recent-item">
+          <a href="/?session_id={{ item.session_id }}#results-shell" class="recent-item">
             <strong>{{ item.question[:80] }}{% if item.question|length > 80 %}...{% endif %}</strong>
             <span>{{ item.updated_at.strftime('%Y-%m-%d %H:%M:%S %Z') }}</span>
             <span class="status-pill status-{{ item.status.value }}">{{ item.status.value }}</span>

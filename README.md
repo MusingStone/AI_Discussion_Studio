@@ -1,29 +1,30 @@
 # AI Discussion Studio
 
-AI Discussion Studio is a local FastAPI application for running multi-participant AI discussions from configuration.
+AI Discussion Studio is a local FastAPI app for running multi-participant AI discussions from editable configuration.
 
-The project is built around three ideas:
+It is built around three ideas:
 
-- participant-centric setup: each participant directly declares `name`, `model`, `prompt`, and optional `role_label`
-- turn-based dialog: every later participant sees the full transcript and can support, rebut, revise, or synthesize
-- config-first workflows: templates, models, and protocol profiles all come from JSON and prompt files instead of hard-coded role registries
+- config-first setup: providers, models, templates, and prompts live in JSON or prompt files
+- participant-centric execution: each participant has its own name, model, prompt, and optional role label
+- live workbench UX: the browser UI lets you start a run, watch turns arrive in order, and review recent sessions
 
-## What The App Does
-
-The app provides a browser UI where you can:
+## What You Can Do
 
 - choose a discussion template
-- load that template's default participants
-- adjust models, prompts, and runtime settings
-- run a live discussion and watch turns appear chronologically
-- review previous sessions
+- load template defaults into the setup form
+- adjust participants, prompts, models, and runtime settings
+- run a live multi-agent discussion
+- inspect the full turn timeline and final answer in the Discussion Workbench
+- reopen or delete recent sessions
 
-The current template library focuses on discussion styles rather than raw model benches:
+Current templates include:
 
 - `Starter Dialog`
 - `Debate Arena`
 - `Brainstorm Studio`
 - `Werewolf Table`
+
+The werewolf mode is treated like a first-class discussion template, but its detailed rules live in code and prompts rather than in this README.
 
 ## Project Structure
 
@@ -43,22 +44,16 @@ The current template library focuses on discussion styles rather than raw model 
 │   └── discussions.json
 ├── prompts/
 │   └── dialog/
-│       ├── general/
-│       ├── debate/
-│       ├── brainstorm/
-│       └── werewolf/
 ├── data/
 ├── .env.example
 └── requirements.txt
 ```
 
-## Configuration Model
+## Configuration
 
 ### `config/providers.json`
 
-Connection layer only.
-
-Each provider entry stores protocol and request information such as:
+Defines protocol-level providers and request routing details such as:
 
 - `provider_id`
 - `display_name`
@@ -66,18 +61,9 @@ Each provider entry stores protocol and request information such as:
 - `base_url`
 - `api_key_env_var`
 
-This project intentionally keeps only two protocol-level providers:
-
-- `openai_compatible`
-- `anthropic_compatible`
-
 ### `config/models.json`
 
-UI model catalog only.
-
-This file controls which models appear in the dropdowns. It does not drive discussion logic by itself.
-
-Each model entry includes:
+Defines the model catalog shown in the UI. Each entry includes:
 
 - `model`
 - `label`
@@ -86,9 +72,7 @@ Each model entry includes:
 
 ### `config/discussions.json`
 
-Primary runtime source of truth for discussion behavior.
-
-Each template defines:
+Defines runtime templates. Each template includes:
 
 - `discussion_id`
 - `display_name`
@@ -96,7 +80,7 @@ Each template defines:
 - `max_turn_cycles`
 - `participants`
 
-Each participant defines:
+Each participant includes:
 
 - `name`
 - `model`
@@ -104,18 +88,7 @@ Each participant defines:
 - optional `role_label`
 - optional `enabled`
 
-## Prompt Layout
-
-Prompts are grouped by discussion style:
-
-- `prompts/dialog/general/`
-  baseline answer / alternative / critique / synthesis
-- `prompts/dialog/debate/`
-  structured debate roles such as proposition, opposition, cross-examiner, judge
-- `prompts/dialog/brainstorm/`
-  framing, wildcard ideation, builder, risk filter, curator
-- `prompts/dialog/werewolf/`
-  narrator, hidden wolf players, seer, witch, hunter, villager, vote counter
+## Prompts
 
 Prompt references use `file:` paths, for example:
 
@@ -125,17 +98,19 @@ file:dialog/debate/debate_judge.txt
 file:dialog/werewolf/werewolf_vote_counter.txt
 ```
 
-## Runtime Behavior
+Prompt folders are grouped by discussion style:
 
-The orchestrator runs discussions as chronological turns:
+- `prompts/dialog/general/`
+- `prompts/dialog/debate/`
+- `prompts/dialog/brainstorm/`
+- `prompts/dialog/werewolf/`
 
-1. load the selected template
-2. resolve enabled participants in order
-3. run one turn per participant per cycle
-4. append each response to `session.turns[]`
-5. let the synthesizer-style participant produce the final consolidated answer
+## Runtime Notes
 
-Later turns always receive the full transcript so far. This makes the flow feel like a real conversation rather than isolated parallel completions.
+- standard discussion templates run in chronological turn order
+- later turns can see the prior transcript
+- werewolf mode uses a dedicated game engine with public state and moderator-only state
+- session results are stored locally under `data/`
 
 ## Local Setup
 
@@ -154,17 +129,11 @@ pip install -r requirements.txt
 
 ### 3. Create a local `.env`
 
-Use the sanitized backup file already included in the repo:
-
 ```bash
 cp .env.example .env
 ```
 
-Then fill in your own key:
-
-```dotenv
-DASHSCOPE_CODING_API_KEY=your_real_key_here
-```
+Then fill in your own API key locally.
 
 ### 4. Run the app
 
@@ -178,22 +147,14 @@ Open:
 http://127.0.0.1:8000
 ```
 
-## Security And Commit Hygiene
+## Security
 
 - `.env` is ignored and should never be committed
-- `.env.example` is the sanitized backup intended for version control
-- session history under `data/sessions.json` is ignored
-- Python caches and generated image files are ignored
-
-Before sharing or committing, make sure:
-
-- no real API key remains in tracked files
-- session history has been cleared if it contains private prompts or outputs
-- only sanitized configuration templates are staged
+- `.env.example` is the sanitized template for version control
+- `data/*.json` is ignored so local session history and test runs stay out of commits
+- never leave real API keys in tracked files, screenshots, or copied examples
 
 ## Recommended First Edits
-
-If you want to customize the app without touching core code, the highest-value files are:
 
 - `config/discussions.json`
 - `config/models.json`
@@ -206,4 +167,4 @@ If you want to customize the app without touching core code, the highest-value f
 - Jinja2 templates
 - lightweight front-end JavaScript
 - KaTeX for math rendering
-- protocol adapters for OpenAI-compatible and Anthropic-compatible APIs
+- OpenAI-compatible and Anthropic-compatible protocol adapters

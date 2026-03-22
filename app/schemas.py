@@ -225,6 +225,7 @@ class SessionTurn(BaseModel):
     turn_id: str
     cycle_number: int
     turn_number: int
+    phase: str | None = None
     participant_id: str
     speaker: str
     role_label: str | None = None
@@ -267,6 +268,8 @@ class SessionRecord(BaseModel):
     final_answer: str | None = None
     unresolved_disagreements: list[str] = Field(default_factory=list)
     open_questions: list[str] = Field(default_factory=list)
+    game_state: dict[str, Any] = Field(default_factory=dict)
+    engine_state: dict[str, Any] = Field(default_factory=dict)
     errors: list[ProviderError] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)

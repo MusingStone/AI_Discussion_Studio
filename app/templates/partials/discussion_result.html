@@ -36,6 +36,57 @@
         </ul>
       </div>
 
+      {% if session.game_state and session.game_state.mode == 'werewolf' %}
+      {% set moderator_view = session.game_state.get('moderator_view', {}) %}
+      <div class="meta-block">
+        <span class="section-kicker">Game State</span>
+        <div>Phase: <strong>{{ session.game_state.phase or 'setup' }}</strong></div>
+        <div>Round: <strong>{{ session.game_state.round_number or 0 }}</strong></div>
+        {% if session.game_state.winner %}
+        <div>Winner: <strong>{{ session.game_state.winner }}</strong></div>
+        {% endif %}
+        <span class="section-kicker">Alive</span>
+        <ul class="participant-roster">
+          {% for player in session.game_state.alive_players %}
+          <li class="participant-roster-item">
+            <strong>{{ player.name }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if session.game_state.dead_players %}
+        <span class="section-kicker">Dead</span>
+        <ul class="participant-roster">
+          {% for player in session.game_state.dead_players %}
+          <li class="participant-roster-item">
+            <strong>{{ player.name }}</strong>
+            <span>{{ player.revealed_role or 'Role hidden' }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <span class="section-kicker">Latest Night</span>
+        <div class="plain-text">{{ session.game_state.last_night_summary or 'No night result yet.' }}</div>
+        <span class="section-kicker">Latest Vote</span>
+        <div class="plain-text">{{ session.game_state.last_vote_summary or 'No vote result yet.' }}</div>
+      </div>
+
+      <div class="meta-block">
+        <span class="section-kicker">Moderator View</span>
+        <div class="muted">User-visible night truth. This panel is not shared back into the public AI transcript.</div>
+        <span class="section-kicker">Role Map</span>
+        <ul class="participant-roster">
+          {% for player in moderator_view.get('role_map', []) %}
+          <li class="participant-roster-item">
+            <strong>{{ player.name }}</strong>
+            <span>{{ player.role }} / {{ player.team }} / {{ player.status }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <span class="section-kicker">Latest Night Truth</span>
+        <div class="plain-text">{{ moderator_view.get('latest_night_private') or 'No night actions resolved yet.' }}</div>
+      </div>
+      {% endif %}
+
       {% if session.unresolved_disagreements %}
       <div class="meta-block">
         <span class="section-kicker">Unresolved</span>
@@ -82,7 +133,7 @@
           <div class="turn-head">
             <div class="speaker-badge">{{ (turn.speaker[:1] or '?') | upper }}</div>
             <div class="turn-main">
-              <div class="turn-index">Turn {{ turn.turn_number }}{% if turn.cycle_number %} / Cycle {{ turn.cycle_number }}{% endif %}</div>
+              <div class="turn-index">Turn {{ turn.turn_number }}{% if turn.cycle_number %} / Cycle {{ turn.cycle_number }}{% endif %}{% if turn.phase %} / {{ turn.phase.replace('_', ' ') }}{% endif %}</div>
               <h3>{{ turn.speaker }}</h3>
               <p>{{ turn.role_label or 'Participant' }}</p>
               <div class="turn-tags">
@@ -114,7 +165,7 @@
 
       <section class="final-answer-panel">
         <div class="section-header">
-          <h3>Final Synthesized Answer</h3>
+          <h3>{% if session.game_state and session.game_state.mode == 'werewolf' %}Final Game Summary{% else %}Final Synthesized Answer{% endif %}</h3>
           <span class="status-pill status-{{ session.status.value }}">{{ session.status.value }}</span>
         </div>
         <div class="render-markdown final-answer">{{ session.final_answer or 'No final answer yet.' }}</div>
