@@ -1,0 +1,112 @@
+{
+  "models": [
+    {
+      "model": "openai_compatible/qwen3.5-plus",
+      "label": "Qwen 3.5 Plus",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/qwen3-max-2026-01-23",
+      "label": "Qwen 3 Max 2026-01-23",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/qwen3-coder-next",
+      "label": "Qwen 3 Coder Next",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/qwen3-coder-plus",
+      "label": "Qwen 3 Coder Plus",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/glm-5",
+      "label": "GLM-5",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/glm-4.7",
+      "label": "GLM-4.7",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/kimi-k2.5",
+      "label": "Kimi K2.5",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/MiniMax-M2.5",
+      "label": "MiniMax M2.5",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "openai_compatible/your-model",
+      "label": "Custom OpenAI-Compatible Model",
+      "provider_id": "openai_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/qwen3.5-plus",
+      "label": "Qwen 3.5 Plus",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/qwen3-max-2026-01-23",
+      "label": "Qwen 3 Max 2026-01-23",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/qwen3-coder-next",
+      "label": "Qwen 3 Coder Next",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/qwen3-coder-plus",
+      "label": "Qwen 3 Coder Plus",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/glm-5",
+      "label": "GLM-5",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/glm-4.7",
+      "label": "GLM-4.7",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/kimi-k2.5",
+      "label": "Kimi K2.5",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/MiniMax-M2.5",
+      "label": "MiniMax M2.5",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    },
+    {
+      "model": "anthropic_compatible/your-model",
+      "label": "Custom Anthropic-Compatible Model",
+      "provider_id": "anthropic_compatible",
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+<div class="panel results-panel">
+  <div class="panel-header">
+    <h2>Discussion Workbench</h2>
+    <p>Use the sidebar for context and the main lane for the live discussion timeline.</p>
+  </div>
+
+  {% if session %}
+  <div class="workbench-shell">
+    <aside class="workbench-sidebar">
+      <div class="stats-grid">
+        <article class="stat-card">
+          <span class="section-kicker">Turns</span>
+          <strong>{{ session.turns | length }}</strong>
+        </article>
+        <article class="stat-card">
+          <span class="section-kicker">Cycles</span>
+          <strong>{{ session.settings.max_turn_cycles }}</strong>
+        </article>
+        <article class="stat-card">
+          <span class="section-kicker">Status</span>
+          <strong>{{ session.status.value }}</strong>
+        </article>
+      </div>
+
+      <div class="meta-block participant-summary">
+        <span class="section-kicker">Session</span>
+        <div>{{ session.discussion_display_name or session.discussion_id or 'Ad hoc discussion' }}</div>
+        <span class="section-kicker">Participants</span>
+        <ul class="participant-roster">
+          {% for participant in session.participants %}
+          <li class="participant-roster-item">
+            <strong>{{ participant.name }}</strong>
+            <span>{{ participant.role_label or 'Participant' }} / {{ participant.model_name or participant.model }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {% if session.unresolved_disagreements %}
+      <div class="meta-block">
+        <span class="section-kicker">Unresolved</span>
+        <ul>
+          {% for item in session.unresolved_disagreements %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if session.open_questions %}
+      <div class="meta-block">
+        <span class="section-kicker">Open Questions</span>
+        <ul>
+          {% for item in session.open_questions %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </aside>
+
+    <div class="workbench-main">
+      <div class="question-panel">
+        <span class="section-kicker">Original Question</span>
+        <div class="render-markdown">{{ session.question }}</div>
+      </div>
+
+      {% if session.errors %}
+      <div class="error-banner">
+        <strong>Errors</strong>
+        <ul class="error-list">
+          {% for error in session.errors %}
+          <li>{{ error.participant_id or 'system' }} / {{ error.provider_id }}: {{ error.message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <section class="timeline">
+        {% for turn in session.turns %}
+        <article class="turn-card">
+          <div class="turn-head">
+            <div class="speaker-badge">{{ (turn.speaker[:1] or '?') | upper }}</div>
+            <div class="turn-main">
+              <div class="turn-index">Turn {{ turn.turn_number }}{% if turn.cycle_number %} / Cycle {{ turn.cycle_number }}{% endif %}</div>
+              <h3>{{ turn.speaker }}</h3>
+              <p>{{ turn.role_label or 'Participant' }}</p>
+              <div class="turn-tags">
+                <span class="meta-chip">{{ turn.provider_display_name }}</span>
+                <span class="meta-chip">{{ turn.model_name }}</span>
+                <span class="meta-chip meta-chip-subtle">{{ turn.prompt_source }}</span>
+              </div>
+            </div>
+            <span class="status-pill status-{{ turn.status.value }}">{{ turn.status.value }}</span>
+          </div>
+          <div class="turn-supporting">
+            <span class="section-kicker">Route</span>
+            <span>{{ turn.model }}</span>
+          </div>
+          {% if turn.error %}
+          <div class="error-banner compact-error">
+            <strong>{{ turn.error.code }}</strong>
+            <div>{{ turn.error.message }}</div>
+          </div>
+          {% endif %}
+          <div class="render-markdown">{{ turn.content or 'Waiting for response...' }}</div>
+        </article>
+        {% else %}
+        <div class="empty-results">
+          <p>No turns yet. The timeline will populate as participants speak.</p>
+        </div>
+        {% endfor %}
+      </section>
+
+      <section class="final-answer-panel">
+        <div class="section-header">
+          <h3>Final Synthesized Answer</h3>
+          <span class="status-pill status-{{ session.status.value }}">{{ session.status.value }}</span>
+        </div>
+        <div class="render-markdown final-answer">{{ session.final_answer or 'No final answer yet.' }}</div>
+      </section>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-results">
+    <p>No discussion has started yet.</p>
+  </div>
+  {% endif %}
+</div>

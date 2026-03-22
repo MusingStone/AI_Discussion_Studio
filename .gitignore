@@ -1,0 +1,14 @@
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.py[cod]
+.venv/
+.env.*
+.env
+!.env.example
+data/sessions.json
+data/*.json
+data/*.log
+*.png
+*.jpeg
+*.jpg

@@ -1,0 +1,30 @@
+{
+  "providers": [
+    {
+      "provider_id": "openai_compatible",
+      "display_name": "OpenAI-Compatible",
+      "protocol_adapter": "openai_compatible_chat",
+      "api_style": "openai_compatible_chat",
+      "api_key_env_var": "DASHSCOPE_CODING_API_KEY",
+      "api_key_label": "OpenAI-Compatible API Key",
+      "base_url": "https://coding.dashscope.aliyuncs.com/v1",
+      "allow_base_url_override": true,
+      "enabled": true,
+      "enabled_by_default": true,
+      "notes": "Default points to DashScope Coding. Override the base URL and API key for DeepSeek, Moonshot, Zhipu, Bailian, OpenAI-compatible gateways, or other compatible vendors."
+    },
+    {
+      "provider_id": "anthropic_compatible",
+      "display_name": "Anthropic-Compatible",
+      "protocol_adapter": "anthropic_messages",
+      "api_style": "messages",
+      "api_key_env_var": "DASHSCOPE_CODING_API_KEY",
+      "api_key_label": "Anthropic-Compatible API Key",
+      "base_url": "https://coding.dashscope.aliyuncs.com/apps/anthropic/v1",
+      "allow_base_url_override": true,
+      "enabled": true,
+      "enabled_by_default": false,
+      "notes": "Default points to DashScope Coding. Override the base URL and API key for Anthropic-compatible vendors and gateways."
+    }
+  ]
+}

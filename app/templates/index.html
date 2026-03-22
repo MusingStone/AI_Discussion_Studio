@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% set active_session = session %}
+{% block content %}
+<header class="hero">
+  <div>
+    <p class="eyebrow">Participant-Centric Dialog Studio</p>
+    <h1>{{ project_name }}</h1>
+    <p class="hero-copy">{{ project_description }}</p>
+  </div>
+  <div class="hero-status">
+    {% if active_session %}
+    <div class="status-card">
+      <span class="status-label">Current session</span>
+      <strong>{{ active_session.session_id }}</strong>
+      <span class="status-pill status-{{ active_session.status.value }}">{{ active_session.status.value }}</span>
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<script id="registry-data" type="application/json">{{ registry_json | safe }}</script>
+
+{% if form_errors %}
+<section class="panel errors-panel">
+  <h2>Validation Errors</h2>
+  <ul class="error-list">
+    {% for error in form_errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<main class="layout">
+  <section class="panel form-panel">
+    <form action="/discuss" method="post" class="discussion-form" id="discussion-form">
+      <div class="panel-header">
+        <h2>Discussion Setup</h2>
+        <p><code>config/discussions.json</code> is the source of truth for participant order, model routing, and prompts.</p>
+      </div>
+
+      <section class="form-section">
+        <h3>Discussion Template</h3>
+        <div class="template-row">
+          <label class="template-select-field">
+            <span>Template</span>
+            <select name="discussion_id" id="discussion-select">
+              {% for discussion in discussion_options %}
+              <option value="{{ discussion.discussion_id }}" {% if form_state.discussion_id == discussion.discussion_id %}selected{% endif %}>{{ discussion.display_name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <div class="template-actions">
+            <button type="button" class="secondary-button" id="apply-discussion-button">Load Template Defaults</button>
+          </div>
+        </div>
+        <div class="meta-block" id="selected-discussion-summary"></div>
+        <p class="muted">Refresh the page after editing <code>config/discussions.json</code> and the participant setup updates immediately.</p>
+      </section>
+
+      <section class="form-section">
+        <h3>Connection Profiles</h3>
+        <p class="muted">These usually come from env or config. Open this only when you need to override a key or base URL.</p>
+        <details class="connection-details">
+          <summary>Review Connection Settings</summary>
+          <div class="credential-stack">
+            {% for credential in provider_credentials %}
+            <article class="credential-row">
+              <div class="credential-heading">
+                <div>
+                  <h4>{{ credential.display_name }}</h4>
+                  <p class="provider-note">{{ credential.protocol_label }}</p>
+                </div>
+                {% if credential.enabled_by_default %}
+                <span class="status-pill status-running">default</span>
+                {% endif %}
+              </div>
+              <div class="credential-fields">
+                <label>
+                  <span>{{ credential.api_key_label }}</span>
+                  <input type="password" name="api_key__{{ credential.provider_id }}" value="{{ credential.api_key_value }}">
+                </label>
+                {% if credential.allow_base_url_override %}
+                <label>
+                  <span>Base URL</span>
+                  <input type="text" name="base_url__{{ credential.provider_id }}" value="{{ credential.base_url_value }}">
+                </label>
+                {% else %}
+                <input type="hidden" name="base_url__{{ credential.provider_id }}" value="{{ credential.base_url_value }}">
+                {% endif %}
+              </div>
+              {% if credential.notes %}
+              <p class="provider-note">{{ credential.notes }}</p>
+              {% endif %}
+            </article>
+            {% endfor %}
+          </div>
+        </details>
+      </section>
+
+      <section class="form-section">
+        <h3>Participants</h3>
+        <div class="participant-toolbar">
+          <p class="muted">One row equals one participant: name, <code>provider/model</code>, prompt, optional role label, and enabled state.</p>
+          <button type="button" class="secondary-button" id="add-participant-button">Add Participant</button>
+        </div>
+        <input type="hidden" name="participant_count" id="participant-count" value="{{ form_state.participants | length }}">
+        <div id="participant-list" class="participant-list">
+          {% for participant in form_state.participants %}
+          <article class="participant-row" data-index="{{ loop.index0 }}">
+            <div class="participant-row-header">
+              <h4>Participant {{ loop.index }}</h4>
+              <button type="button" class="danger-link remove-participant-button">Remove</button>
+            </div>
+            <div class="participant-grid">
+              <input type="hidden" name="participants-{{ loop.index0 }}-sort_order" value="{{ participant.sort_order }}">
+              <input type="hidden" name="participants-{{ loop.index0 }}-participant_id" value="{{ participant.participant_id }}">
+              <label>
+                <span>Name</span>
+                <input type="text" name="participants-{{ loop.index0 }}-name" value="{{ participant.name or '' }}">
+              </label>
+              <label>
+                <span>Provider / platform</span>
+                <select name="participants-{{ loop.index0 }}-provider_id" class="participant-provider-select">
+                  {% for provider in provider_options %}
+                  <option value="{{ provider.provider_id }}" {% if participant.provider_id == provider.provider_id %}selected{% endif %}>{{ provider.display_name }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                <span>Model</span>
+                <select name="participants-{{ loop.index0 }}-model_name" class="participant-model-select">
+                  {% for model in model_options %}
+                    {% if model.provider_id == participant.provider_id %}
+                  <option value="{{ model.model_name }}" {% if participant.model_name == model.model_name %}selected{% endif %}>{{ model.label }} ({{ model.model_name }})</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                <span>Role label</span>
+                <input type="text" name="participants-{{ loop.index0 }}-role_label" value="{{ participant.role_label or '' }}" placeholder="Optional label such as Critic">
+              </label>
+              <label class="checkbox-label">
+                <span>Enabled</span>
+                <input type="checkbox" name="participants-{{ loop.index0 }}-enabled" value="true" {% if participant.enabled %}checked{% endif %}>
+              </label>
+            </div>
+            <label>
+              <span>Prompt or file path</span>
+              <textarea name="participants-{{ loop.index0 }}-prompt" rows="4" placeholder="Inline prompt text or file:dialog/general/answerer.txt">{{ participant.prompt or participant.prompt_source or '' }}</textarea>
+            </label>
+            <p class="participant-meta">
+              Provider: <strong>{{ participant.provider_id }}</strong>
+              <span class="meta-divider">|</span>
+              Model: <strong>{{ participant.model_name }}</strong>
+              <span class="meta-divider">|</span>
+              Prompt source: <strong>{{ participant.prompt_source }}</strong>
+            </p>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Discussion Settings</h3>
+        <div class="field-grid">
+          <label>
+            <span>Max turn cycles</span>
+            <input type="number" min="1" max="8" name="max_turn_cycles" value="{{ form_state.settings.max_turn_cycles }}">
+          </label>
+          <label>
+            <span>Max output tokens</span>
+            <input type="number" min="128" max="12000" name="max_output_tokens" value="{{ form_state.settings.max_output_tokens }}">
+          </label>
+          <label>
+            <span>Temperature</span>
+            <input type="number" min="0" max="2" step="0.1" name="temperature" value="{{ form_state.settings.temperature }}">
+          </label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3>Question</h3>
+        <label>
+          <span>Your question</span>
+          <textarea name="question" rows="8" placeholder="Ask one question and let the configured participants discuss it." required>{{ form_state.question }}</textarea>
+        </label>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="primary-button">Start Discussion</button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="panel sidebar-panel">
+    <div class="panel-header">
+      <h2>Template Catalog</h2>
+      <p>Discussion templates define participant order, prompts, and model mapping directly from configuration.</p>
+    </div>
+    <div class="template-list">
+      {% for discussion in discussion_options %}
+      <article class="template-card">
+        <h3>{{ discussion.display_name }}</h3>
+        <p class="muted">{{ discussion.description }}</p>
+        <div class="catalog-meta">Max turn cycles: {{ discussion.max_turn_cycles }}</div>
+        <ol class="participant-order">
+          {% for participant in discussion.participants %}
+          <li>
+            <strong>{{ participant.name }}</strong>
+            <span class="muted">{{ participant.role_label or 'Participant' }} / {{ participant.model }} / {{ participant.prompt }}</span>
+          </li>
+          {% endfor %}
+        </ol>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="panel-header recent-header">
+      <h2>Protocol Profiles</h2>
+      <p>Only the two protocol families stay visible here. Models and participant behavior live elsewhere.</p>
+    </div>
+    <div class="catalog-list">
+      {% for provider in provider_options %}
+      <article class="catalog-card">
+        <h3>{{ provider.display_name }}</h3>
+        <p class="muted">{{ provider.notes }}</p>
+        <div class="catalog-meta">{{ provider.provider_id }} / {{ provider.protocol_adapter }}</div>
+        <div class="catalog-meta">{{ provider.base_url or 'Base URL from env or form override' }}</div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="panel-header recent-header">
+      <h2>Recent Sessions</h2>
+    </div>
+    <div class="recent-list">
+      {% if recent_sessions %}
+        {% for item in recent_sessions %}
+        <div class="recent-item-shell">
+          <a href="/?session_id={{ item.session_id }}" class="recent-item">
+            <strong>{{ item.question[:80] }}{% if item.question|length > 80 %}...{% endif %}</strong>
+            <span>{{ item.updated_at.strftime('%Y-%m-%d %H:%M:%S %Z') }}</span>
+            <span class="status-pill status-{{ item.status.value }}">{{ item.status.value }}</span>
+          </a>
+          <form action="/sessions/{{ item.session_id }}/delete" method="post" class="recent-delete-form">
+            <button type="submit" class="danger-link">Delete</button>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="muted">No sessions yet.</p>
+      {% endif %}
+    </div>
+  </aside>
+</main>
+
+<section
+  class="results-shell"
+  id="results-shell"
+  data-session-id="{{ active_session.session_id if active_session else '' }}"
+  data-session-status="{{ active_session.status.value if active_session else '' }}"
+>
+  {% include "partials/discussion_result.html" %}
+</section>
+{% endblock %}

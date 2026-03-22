@@ -1,0 +1,184 @@
+{
+  "default_discussion_id": "starter_dialog",
+  "discussions": [
+    {
+      "discussion_id": "starter_dialog",
+      "display_name": "Starter Dialog",
+      "description": "A simple participant-driven discussion using the default OpenAI-compatible connection.",
+      "max_turn_cycles": 2,
+      "participants": [
+        {
+          "name": "Answerer",
+          "model": "openai_compatible/qwen3.5-plus",
+          "prompt": "file:dialog/general/answerer.txt",
+          "role_label": "Answerer",
+          "enabled": true
+        },
+        {
+          "name": "Alternative",
+          "model": "openai_compatible/qwen3-coder-next",
+          "prompt": "file:dialog/general/alternative.txt",
+          "role_label": "Alternative",
+          "enabled": true
+        },
+        {
+          "name": "Critic",
+          "model": "openai_compatible/glm-4.7",
+          "prompt": "file:dialog/general/critic.txt",
+          "role_label": "Critic",
+          "enabled": true
+        },
+        {
+          "name": "Synthesizer",
+          "model": "openai_compatible/MiniMax-M2.5",
+          "prompt": "file:dialog/general/synthesizer.txt",
+          "role_label": "Synthesizer",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "discussion_id": "debate_arena",
+      "display_name": "Debate Arena",
+      "description": "A structured pro-versus-con debate with cross-examination and a final judge.",
+      "max_turn_cycles": 2,
+      "participants": [
+        {
+          "name": "Proposition",
+          "model": "openai_compatible/qwen3-max-2026-01-23",
+          "prompt": "file:dialog/debate/debate_proposition.txt",
+          "role_label": "Affirmative",
+          "enabled": true
+        },
+        {
+          "name": "Opposition",
+          "model": "openai_compatible/glm-5",
+          "prompt": "file:dialog/debate/debate_opposition.txt",
+          "role_label": "Negative",
+          "enabled": true
+        },
+        {
+          "name": "Cross Examiner",
+          "model": "openai_compatible/kimi-k2.5",
+          "prompt": "file:dialog/debate/debate_cross_examiner.txt",
+          "role_label": "Cross Examiner",
+          "enabled": true
+        },
+        {
+          "name": "Judge",
+          "model": "openai_compatible/MiniMax-M2.5",
+          "prompt": "file:dialog/debate/debate_judge.txt",
+          "role_label": "Synthesizer",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "discussion_id": "brainstorm_studio",
+      "display_name": "Brainstorm Studio",
+      "description": "A creative ideation template that mixes framing, bold ideas, building, and constraint filtering.",
+      "max_turn_cycles": 2,
+      "participants": [
+        {
+          "name": "Problem Framer",
+          "model": "openai_compatible/qwen3.5-plus",
+          "prompt": "file:dialog/brainstorm/brainstorm_seed.txt",
+          "role_label": "Framer",
+          "enabled": true
+        },
+        {
+          "name": "Wildcard",
+          "model": "openai_compatible/qwen3-coder-plus",
+          "prompt": "file:dialog/brainstorm/brainstorm_wildcard.txt",
+          "role_label": "Wildcard",
+          "enabled": true
+        },
+        {
+          "name": "Builder",
+          "model": "openai_compatible/qwen3-coder-next",
+          "prompt": "file:dialog/brainstorm/brainstorm_builder.txt",
+          "role_label": "Builder",
+          "enabled": true
+        },
+        {
+          "name": "Constraint Keeper",
+          "model": "openai_compatible/glm-4.7",
+          "prompt": "file:dialog/brainstorm/risk_filter.txt",
+          "role_label": "Constraint Keeper",
+          "enabled": true
+        },
+        {
+          "name": "Curator",
+          "model": "openai_compatible/MiniMax-M2.5",
+          "prompt": "file:dialog/brainstorm/brainstorm_curator.txt",
+          "role_label": "Synthesizer",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "discussion_id": "werewolf_table",
+      "display_name": "Werewolf Table",
+      "description": "A simplified AI werewolf showcase with narrator, two hidden wolves, seer, witch, hunter, villager, and a vote counter.",
+      "max_turn_cycles": 2,
+      "participants": [
+        {
+          "name": "Narrator",
+          "model": "openai_compatible/qwen3.5-plus",
+          "prompt": "file:dialog/werewolf/werewolf_narrator.txt",
+          "role_label": "Narrator",
+          "enabled": true
+        },
+        {
+          "name": "Player A",
+          "model": "openai_compatible/qwen3-max-2026-01-23",
+          "prompt": "file:dialog/werewolf/werewolf_player_wolf.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Player B",
+          "model": "openai_compatible/glm-5",
+          "prompt": "file:dialog/werewolf/werewolf_player_wolf.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Player C",
+          "model": "openai_compatible/qwen3-coder-next",
+          "prompt": "file:dialog/werewolf/werewolf_seer.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Player D",
+          "model": "openai_compatible/qwen3-coder-plus",
+          "prompt": "file:dialog/werewolf/werewolf_player_witch.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Player E",
+          "model": "openai_compatible/kimi-k2.5",
+          "prompt": "file:dialog/werewolf/werewolf_hunter.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Player F",
+          "model": "openai_compatible/glm-4.7",
+          "prompt": "file:dialog/werewolf/werewolf_player_villager.txt",
+          "role_label": "Player",
+          "enabled": true
+        },
+        {
+          "name": "Vote Counter",
+          "model": "openai_compatible/MiniMax-M2.5",
+          "prompt": "file:dialog/werewolf/werewolf_vote_counter.txt",
+          "role_label": "Synthesizer",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}
